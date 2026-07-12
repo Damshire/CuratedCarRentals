@@ -5,6 +5,10 @@ import { hasPublicBookingAccessForPage } from "@/lib/bookings/publicAccess";
 import { dbQuery } from "@/lib/db";
 import { formatBookingDateOnly } from "@/lib/bookings/bookingDateTime";
 import {
+  arePublicOnlinePaymentsEnabled,
+  getPublicPaymentsUnavailableMessage,
+} from "@/lib/payments/publicPaymentsAvailability";
+import {
   computeBookingPricingFromStoredSnapshot,
   fetchNetPaidToDate,
 } from "@/lib/payments/pricing";
@@ -72,6 +76,19 @@ export default async function BookingPayPage({
               </p>
             </div>
           ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (!arePublicOnlinePaymentsEnabled()) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
+        <div className="rounded-3xl border border-[var(--ccr-border)] bg-[var(--ccr-surface)] p-8 shadow-sm">
+          <h1 className="text-3xl font-bold text-[var(--ccr-text)]">Payment unavailable</h1>
+          <p className="mt-2 text-sm text-[var(--ccr-muted)]">
+            {getPublicPaymentsUnavailableMessage()}
+          </p>
         </div>
       </div>
     );

@@ -66,3 +66,16 @@ test("public WiPay start routes use shared idempotent start helper", () => {
   assert.match(helper, /hosted_page_url/);
   assert.match(helper, /payment_in_progress/);
 });
+
+test("public booking payment pages respect the online payment availability gate", () => {
+  const files = [
+    "src/app/(site)/bookings/[id]/page.tsx",
+    "src/app/(site)/bookings/[id]/pay/page.tsx",
+    "src/app/(site)/bookings/[id]/balance/page.tsx",
+  ];
+
+  for (const file of files) {
+    const code = read(file);
+    assert.match(code, /arePublicOnlinePaymentsEnabled\(/);
+  }
+});

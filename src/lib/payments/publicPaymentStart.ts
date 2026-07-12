@@ -9,6 +9,10 @@ import { getDbPool } from "@/lib/db";
 import { logError, logWarn } from "@/lib/log";
 import { formatJmdDecimal } from "@/lib/money";
 import {
+  arePublicOnlinePaymentsEnabled,
+  getPublicPaymentsUnavailableMessage,
+} from "@/lib/payments/publicPaymentsAvailability";
+import {
   computeBookingPricingFromStoredSnapshot,
   fetchNetPaidToDate,
   readPaymentOption,
@@ -346,6 +350,15 @@ export async function startPublicWipayPayment({
   mode: PublicPaymentStartMode;
   customAmountCents?: number | null;
 }) {
+  if (!arePublicOnlinePaymentsEnabled()) {
+    logWarn("public_wipay_start_disabled", { bookingId, mode });
+    return jsonError(
+      503,
+      "payments_unavailable",
+      getPublicPaymentsUnavailableMessage(),
+    );
+  }
+
   const envError = validateEnvironment();
   if (envError) return envError;
 

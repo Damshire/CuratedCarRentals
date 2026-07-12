@@ -8,6 +8,10 @@ import { formatBookingDateOnly } from "@/lib/bookings/bookingDateTime";
 import { formatJmd } from "@/lib/money";
 import { readBookingOverrideInfo } from "@/lib/bookings/holds";
 import {
+  arePublicOnlinePaymentsEnabled,
+  getPublicPaymentsUnavailableMessage,
+} from "@/lib/payments/publicPaymentsAvailability";
+import {
   computeBookingPricingFromStoredSnapshot,
   fetchNetPaidToDate,
 } from "@/lib/payments/pricing";
@@ -76,6 +80,7 @@ export default async function BookingSummaryPage({
   const isNonBlocking = summary.netPaidToDate <= 0;
   const isOverridden = overrideInfo.isOverridden;
   const isCancelled = String(booking.status).toUpperCase() === "CANCELLED";
+  const onlinePaymentsEnabled = arePublicOnlinePaymentsEnabled();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12">
@@ -177,8 +182,15 @@ export default async function BookingSummaryPage({
           </div>
         </div>
 
+        {!onlinePaymentsEnabled && !isCancelled ? (
+          <div className="mt-6 rounded-xl border border-amber-300/40 bg-amber-200/15 p-4 text-sm text-amber-100">
+            <p className="font-semibold">Online payments unavailable</p>
+            <p className="mt-1 text-amber-100/90">{getPublicPaymentsUnavailableMessage()}</p>
+          </div>
+        ) : null}
+
         <div className="mt-6 flex flex-wrap gap-3">
-          {!isCancelled && canPayDeposit ? (
+          {onlinePaymentsEnabled && !isCancelled && canPayDeposit ? (
             <Link
               href={`/bookings/${booking.id}/pay`}
               className="rounded-xl bg-[var(--ccr-primary)] px-4 py-2 text-sm font-semibold text-white"
@@ -186,7 +198,7 @@ export default async function BookingSummaryPage({
               Make Payment
             </Link>
           ) : null}
-          {!isCancelled && canPayBalance ? (
+          {onlinePaymentsEnabled && !isCancelled && canPayBalance ? (
             <Link
               href={`/bookings/${booking.id}/balance`}
               className="rounded-xl border border-[var(--ccr-border)] bg-[var(--ccr-surface)] px-4 py-2 text-sm font-semibold text-[var(--ccr-text)]"
